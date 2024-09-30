@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:ffi';
 import 'dart:io';
 
+import 'package:campfire/pages/home.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/material.dart';
+
 
 void main() {
   FlutterBluePlus.setLogLevel(LogLevel.verbose, color: true);
@@ -15,39 +16,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Test app',
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Test'),
-        ),
-        body: Center(
-          child: Column(             // Use a Column to stack widgets vertically
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Text('Hello World'),
-              SizedBox(height: 20),  // Add space between the text and button
-              ElevatedButton(
-                onPressed: () {
-                  // Define the action to perform when the button is clicked
-                  _onButtonClicked();
-                },
-                child: const Text('Click Me'),  // Button label
-              ),
-            ],
-          ),
-        ),
-      ),
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Campfire',
+      home: HomePage(),
     );
   }
+}
 
   _onButtonClicked() async {
-    print("The button has been clicked!");
-    if(await FlutterBluePlus.isSupported == false){
-      print("Bluetooth is not supported by this platform!");
-      return;
-    }
-
     var subscription = FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) async {
       print(state);
       if (state == BluetoothAdapterState.on) {
@@ -102,4 +79,3 @@ class MyApp extends StatelessWidget {
     });
     subscription.cancel(); // Cancel the subscription when done
   }
-}
