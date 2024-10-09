@@ -27,10 +27,15 @@ class Bluetooth {
       await FlutterBluePlus.turnOn();
     }
 
+    var isBluetoothOn = await FlutterBluePlus.isOn;
+    if(!isBluetoothOn){
+      print("There is something wrong with the Bluetooth!");
+    }
+
     // Check the Bluetooth adapter state
     var subscription = FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
       if (state == BluetoothAdapterState.on) {
-        FlutterBluePlus.startScan(timeout: const Duration(seconds: 10));
+        FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
 
         // Listen for scan results
         var scanSubscription = FlutterBluePlus.onScanResults.listen((results) {
@@ -48,7 +53,7 @@ class Bluetooth {
         });
 
         // Stop scanning after the timeout and cancel the subscription
-        FlutterBluePlus.stopScan();
+        //FlutterBluePlus.stopScan();
         FlutterBluePlus.cancelWhenScanComplete(scanSubscription);
       } else {
         // Handle Bluetooth being in an improper state
