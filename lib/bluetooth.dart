@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -26,7 +27,33 @@ class Bluetooth {
     }
     var subscription = FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
       if (state == BluetoothAdapterState.on) {
-        print("This should have run!");
+
+        var subscription = FlutterBluePlus.onScanResults.listen((results) {
+          if (results.isNotEmpty) {
+            ScanResult r = results.last; // the most recently found device
+            print('${r.device.remoteId}: "${r.advertisementData.advName}" found!');
+          }
+        },
+          onError: (e) => print(e),
+        );
+
+// cleanup: cancel subscription when scanning stops
+        FlutterBluePlus.cancelWhenScanComplete(subscription);
+
+// Wait for Bluetooth enabled & permission granted
+// In your real app you should use `FlutterBluePlus.adapterState.listen` to handle all states
+
+// Start scanning w/ timeout
+// Optional: use `stopScan()` as an alternative to timeout
+        FlutterBluePlus.startScan(
+            //withServices:[Guid("180D")], // match any of the specified services
+            //withNames:["Bluno"], // *or* any of the specified names
+            timeout: Duration(seconds:15));
+
+// wait for scanning to stop
+        FlutterBluePlus.isScanning.where((val) => val == false).first;
+
+
       } else {
         String error = state as String;
         String errorMsg = "Error with Bluetooth Device code: $error";
@@ -39,7 +66,8 @@ class Bluetooth {
         );
       }
     });
-    subscription.cancel(); // Used to make sure we don't have duplicate listeners
+    print("Testing if the program gets this far in execution!");
+    //subscription.cancel(); // Used to make sure we don't have duplicate listeners
   }
 
 }
