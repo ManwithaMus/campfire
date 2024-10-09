@@ -22,40 +22,38 @@ class Bluetooth {
 
   static Future<void> scan(BuildContext context) async {
     print("Bluetooth.scan has been called!");
+    // Turn on Bluetooth for Android devices if needed
     if (Platform.isAndroid) { // Figure out what to do with this or if it's even needed?
       await FlutterBluePlus.turnOn();
     }
+
+    // Check the Bluetooth adapter state
     var subscription = FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
       if (state == BluetoothAdapterState.on) {
+        FlutterBluePlus.startScan(timeout: const Duration(seconds: 10));
 
-        var subscription = FlutterBluePlus.onScanResults.listen((results) {
+        // Listen for scan results
+        var scanSubscription = FlutterBluePlus.onScanResults.listen((results) {
           if (results.isNotEmpty) {
-            ScanResult r = results.last; // the most recently found device
-            print('${r.device.remoteId}: "${r.advertisementData.advName}" found!');
+            print("Found ${results.length} devices.");
+
+            for (ScanResult r in results) {
+              print('${r.device.remoteId}: "${r.advertisementData.advName}" found!');
+            }
+            ScanResult lastResult = results.last;
+            BluetoothDevice device = lastResult.device;
+          }else{
+            print("Could not find any Bluetooth devices!");
           }
-        },
-          onError: (e) => print(e),
-        );
+        });
 
-// cleanup: cancel subscription when scanning stops
-        FlutterBluePlus.cancelWhenScanComplete(subscription);
-
-// Wait for Bluetooth enabled & permission granted
-// In your real app you should use `FlutterBluePlus.adapterState.listen` to handle all states
-
-// Start scanning w/ timeout
-// Optional: use `stopScan()` as an alternative to timeout
-        FlutterBluePlus.startScan(
-            //withServices:[Guid("180D")], // match any of the specified services
-            //withNames:["Bluno"], // *or* any of the specified names
-            timeout: Duration(seconds:15));
-
-// wait for scanning to stop
-        FlutterBluePlus.isScanning.where((val) => val == false).first;
-
-
+        // Stop scanning after the timeout and cancel the subscription
+        FlutterBluePlus.stopScan();
+        FlutterBluePlus.cancelWhenScanComplete(scanSubscription);
       } else {
-        String error = state as String;
+        // Handle Bluetooth being in an improper state
+        // String error = state as String;
+        String error = "ERROR";
         String errorMsg = "Error with Bluetooth Device code: $error";
         showDialog(
           context: context,
