@@ -23,7 +23,8 @@ class _MyAppState extends State<ConnectPage> {
   }
 
   void findDevices(){
-    Bluetooth.scan(context);
+    Bluetooth.advertise();
+    print(Bluetooth.scan(context));
   }
 
   @override
