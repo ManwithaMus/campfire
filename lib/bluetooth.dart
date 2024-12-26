@@ -22,70 +22,57 @@ class Bluetooth {
     print("Bluetooth should be working just fine!");
   }
 
-  static Future<List<ScanResult>> scan(BuildContext context) async {
-    List<ScanResult> results = List<ScanResult>.empty();
+  static Future<Set<ScanResult>> scan(BuildContext context) async {
     print("Bluetooth.scan has been called!");
-    // Turn on Bluetooth for Android devices if needed
-    if (Platform.isAndroid) { // Figure out what to do with this or if it's even needed?
-      await FlutterBluePlus.turnOn();
+
+    // Ensure Bluetooth is enabled
+    if (Platform.isAndroid) await FlutterBluePlus.turnOn();
+    if (!await FlutterBluePlus.isOn) {
+      print("Bluetooth is not enabled!");
+      return {};
     }
 
-    var isBluetoothOn = await FlutterBluePlus.isOn;
-    if(!isBluetoothOn){
-      print("There is something wrong with the Bluetooth!");
-    }
+    Completer<Set<ScanResult>> completer = Completer();
+    Set<ScanResult> results = {};
 
-    // Check the Bluetooth adapter state
-    var subscription = FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
-      if (state == BluetoothAdapterState.on) {
-        FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
+    // Start scanning
+    FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
-        // Listen for scan results
-        var scanSubscription = FlutterBluePlus.onScanResults.listen((results) {
-          if (results.isNotEmpty) {
-            print("Found ${results.length} devices.");
-
-            for (ScanResult r in results) {
-              if(r.advertisementData.serviceUuids.isNotEmpty && r.advertisementData.serviceUuids[0] == Guid(uuid)) {
-                print('${r.device.remoteId}: "${r.advertisementData.advName}" found!');
-                results.add(r);
-              }
-              }
-            ScanResult lastResult = results.last;
-            BluetoothDevice device = lastResult.device;
-          }else{
-            print("Could not find any Bluetooth devices!");
-          }
-        });
-
-        // Stop scanning after the timeout and cancel the subscription
-        FlutterBluePlus.cancelWhenScanComplete(scanSubscription);
-      } else {
-        // Handle Bluetooth being in an improper state
-        // String error = state as String;
-        String error = "ERROR";
-        String errorMsg = "Error with Bluetooth Device code: $error";
-        showDialog(
-          context: context,
-          builder: (context) =>
-          AlertDialog(
-            title: Text(errorMsg),
-          ),
-        );
-      }
+    // Listen for scan results
+    var scanSubscription = FlutterBluePlus.onScanResults.listen((scanResults) {
+      results.addAll(
+        scanResults.where((r) =>
+        r.advertisementData.serviceUuids.isNotEmpty &&
+            r.advertisementData.serviceUuids[0] == Guid(uuid)),
+      );
     });
-    print("Testing if the program gets this far in execution!");
-    //subscription.cancel(); // Used to make sure we don't have duplicate listeners
-    return results;
+
+    // Complete scanning after timeout
+    Future.delayed(const Duration(seconds: 5), () async {
+      await FlutterBluePlus.stopScan();
+      await scanSubscription.cancel();
+      completer.complete(results);
+    });
+
+    return completer.future;
   }
 
-  static void advertise(){
+
+  static Future<void> advertise() async {
     final AdvertiseData advertiseData = AdvertiseData(
       includeDeviceName: true,
       serviceUuid: uuid
     );
     FlutterBlePeripheral blePeripheral = FlutterBlePeripheral();
     blePeripheral.start(advertiseData: advertiseData);
+
+    List<BluetoothDevice> devices = await FlutterBluePlus.connectedDevices;
+
+    // If there are any connected devices, stop advertising
+    if (devices.isNotEmpty) {
+      print("Device connected. Stopping advertising...");
+      blePeripheral.stop(); // Stop advertising
+    }
 
   }
 
