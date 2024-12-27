@@ -65,7 +65,8 @@ class _MyAppState extends State<ConnectPage> {
                     title: Text(deviceName),
                     subtitle: Text("ID: $deviceID"),
                     onTap: () {
-                      Navigator.pop(context, device);
+                      Bluetooth bluetooth = Bluetooth(device);
+                      Navigator.pop(context, bluetooth);
                     },
                   );
                 },
