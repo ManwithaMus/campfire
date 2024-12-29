@@ -17,10 +17,10 @@ samples, guidance on mobile development, and a full API reference.
 
 ### TODO
 
-~~1. Refactor code so that only one instance of a Bluetooth object is in use at any given time~~
-2. Implement the send page in send.dart so that it uses the single instance of Bluetooth object
-3. Redesign the home page to make it more appealing and improve functionality/usability
-4. Run some tests on Androids
-5. Add additional features and functionality like saving messages received from devices
-6. Run some tests on Iphone's and fix any issues exclusive to the platform (compatibility?)
-7. ...
+~~1. Refactor code so that only one instance of a Bluetooth object is in use at any given time~~  
+2. Implement the send page to make use of the Bluetooth class  
+3. Redesign the home page to make it more appealing and improve functionality/usability  
+4. Run some tests on Androids  
+5. Add additional features and functionality like saving messages received from devices  
+6. Run some tests on Iphone's and fix any issues exclusive to the platform (compatibility?)  
+7. ...  
