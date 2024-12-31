@@ -15,6 +15,7 @@ class HomePage extends StatefulWidget {
 
 class _MyAppState extends State<HomePage> {
   ScanResult? selectedDevice;
+  Bluetooth? bluetoothDevice;
 
   @override
   void initState() {
@@ -59,6 +60,7 @@ class _MyAppState extends State<HomePage> {
                       // Handle the returned ScanResult
                       setState(() {
                         selectedDevice = result;
+                        bluetoothDevice = Bluetooth(result);
                       });
 
                       String deviceName = result.advertisementData.advName ?? "Unknown Device";
@@ -87,12 +89,12 @@ class _MyAppState extends State<HomePage> {
                 padding: const EdgeInsets.only(top: 75.0),
                 child: ElevatedButton(
                   onPressed: () {
-                    if (selectedDevice != null) {
+                    if (selectedDevice != null && bluetoothDevice != null) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => SendPage(
-                            device: selectedDevice!.device, // Pass the selectedDevice
+                            device: bluetoothDevice, // Pass the selectedDevice
                           ),
                         ),
                       );

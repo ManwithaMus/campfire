@@ -1,125 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import '../bluetooth.dart';
 
-class SendPage extends StatefulWidget{
-  final BluetoothDevice device;
+class SendPage extends StatefulWidget {
+  final Bluetooth bluetooth;
 
-  const SendPage({super.key, required this.device});
+  const SendPage({Key? key, required this.bluetooth}) : super(key: key);
 
   @override
-  _SendPageState createState() => _SendPageState();
+  State<SendPage> createState() => _SendPageState();
 }
 
 class _SendPageState extends State<SendPage> {
-  BluetoothDevice? _device;
-  BluetoothCharacteristic? _txCharacteristic; // Characteristic for transmitting data
-  BluetoothCharacteristic? _rxCharacteristic; // Characteristic for receiving data
-  TextEditingController _textController = TextEditingController();
-  String _receivedData = "";
+  final TextEditingController _messageController = TextEditingController();
+  String _receivedMessage = '';
 
   @override
-  void initState() {
-    super.initState();
-    _device = widget.device;
-    _connectToDevice();
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
   }
 
-  // Connect to the Bluetooth device and discover services and characteristics
-  Future<void> _connectToDevice() async {
-    try {
-      await _device!.connect();
-      List<BluetoothService> services = await _device!.discoverServices();
-      _setupCharacteristics(services);
-    } catch (e) {
-      print('Error connecting to device: $e');
-    }
-  }
-
-  // Find the necessary characteristics for sending/receiving data
-  void _setupCharacteristics(List<BluetoothService> services) {
-    for (var service in services) {
-      for (var characteristic in service.characteristics) {
-        // Assuming characteristic for sending data is writeable and for receiving is readable
-        if (characteristic.properties.write) {
-          _txCharacteristic = characteristic;
-        }
-        if (characteristic.properties.read) {
-          _rxCharacteristic = characteristic;
-          _startListeningForData();
-        }
+  Future<void> _sendMessage() async {
+    final message = _messageController.text.trim();
+    if (message.isNotEmpty) {
+      final success = await widget.bluetooth.sendMessage(message);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Message sent: $message")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to send message")),
+        );
       }
     }
   }
 
-  // Start listening for received data
-  void _startListeningForData() {
-    if (_rxCharacteristic != null) {
-      _rxCharacteristic!.setNotifyValue(true);
-      _rxCharacteristic!.value.listen((value) {
-        setState(() {
-          _receivedData = String.fromCharCodes(value);
-        });
-      });
-    }
-  }
-
-  // Send data to the Bluetooth device
-  Future<void> _sendData() async {
-    if (_txCharacteristic != null) {
-      String dataToSend = _textController.text;
-      List<int> bytes = dataToSend.codeUnits; // Convert text to byte array
-      await _txCharacteristic!.write(bytes);
+  void _startListening() {
+    widget.bluetooth.startListening((String message) {
       setState(() {
-        _textController.clear();
+        _receivedMessage = message;
       });
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _device!.disconnect();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Send Data to Device'),
+        title: const Text("Send Messages"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Text area to display received data
-            Container(
-              padding: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              child: Text(
-                _receivedData.isEmpty ? "No data received" : _receivedData,
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Text field for user to input data to send
             TextField(
-              controller: _textController,
+              controller: _messageController,
               decoration: const InputDecoration(
-                labelText: 'Enter data to send',
+                labelText: "Enter message",
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 20),
-
-            // Button to send data
+            const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _sendData,
-              child: const Text('Send Data'),
+              onPressed: _sendMessage,
+              child: const Text("Send"),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _startListening,
+              child: const Text("Start Listening"),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "Received Message: $_receivedMessage",
+              style: const TextStyle(fontSize: 16),
             ),
           ],
         ),

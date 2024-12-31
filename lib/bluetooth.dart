@@ -12,6 +12,7 @@ class Bluetooth {
 
   Bluetooth(this.scanResult) : device = scanResult.device;
 
+  // Below functions implement all of the functionality required to transmit messages through BLE
   Future<void> connect() async{
     try {
       print('Connecting to ${device.platformName} (${device.remoteId})...');
@@ -57,6 +58,7 @@ class Bluetooth {
     }
   }
 
+  // Below methods are static and for the most part should be used prior to constructing an instance of Bluetooth
   static Future<void> check(BuildContext context) async {
     if (await FlutterBluePlus.isSupported == false) {
       showDialog(
