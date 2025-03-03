@@ -1,8 +1,10 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import '../bluetooth.dart';
 
 class SendPage extends StatefulWidget {
-  final Bluetooth bluetooth;
+  final Bluetooth? bluetooth;
 
   const SendPage({Key? key, required this.bluetooth}) : super(key: key);
 
@@ -23,25 +25,12 @@ class _SendPageState extends State<SendPage> {
   Future<void> _sendMessage() async {
     final message = _messageController.text.trim();
     if (message.isNotEmpty) {
-      final success = await widget.bluetooth.sendMessage(message);
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Message sent: $message")),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to send message")),
-        );
-      }
+      //await widget.bluetooth.sendData(message); // TODO Send data to the device connected to in Bluetooth class
     }
   }
 
   void _startListening() {
-    widget.bluetooth.startListening((String message) {
-      setState(() {
-        _receivedMessage = message;
-      });
-    });
+    //Future<String?> read = widget.bluetooth.readData(); // TODO Figure out how to read data from other device
   }
 
   @override

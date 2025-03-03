@@ -6,9 +6,9 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 
 class Bluetooth {
-  static const String uuid = "00001111-0000-1000-8000-00805f9b34fb"; // Should be equivalent to UUID of 0x1111?
+  static const String uuid = "00001111-0000-1000-8000-00805f9b34fb"; // Should be equivalent to UUID of 0x1111? (identifier for other devices running my app)
   final ScanResult scanResult;
-  late final BluetoothDevice device;
+  late final BluetoothDevice device; // This is the object for the current "peripheral" device connected to!
 
   Bluetooth(this.scanResult) : device = scanResult.device;
 

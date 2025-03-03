@@ -94,7 +94,7 @@ class _MyAppState extends State<HomePage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => SendPage(
-                            device: bluetoothDevice, // Pass the selectedDevice
+                            bluetooth: bluetoothDevice, // Pass the selectedDevice
                           ),
                         ),
                       );
